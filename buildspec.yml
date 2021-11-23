@@ -2,12 +2,19 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - echo Restore started on `date`
+      - echo Beta dotnetcore Build started on `date`
       - dotnet restore HelloYogis.csproj
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 328765353998.dkr.ecr.us-west-2.amazonaws.com
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - REPOSITORY_URI=328765353998.dkr.ecr.us-east-2.amazonaws.com/glm-beta-dotnetcore
+      - echo $COMMIT_HASH
+      - echo $REPOSITORY=URI
   build:
     commands:
       - echo Build started on `date`
       - dotnet publish -c release -o ./build_output HelloYogis.csproj
+      - aws --version
 artifacts:
   files:
     - ./**/*
