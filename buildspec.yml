@@ -2,20 +2,27 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - echo Beta dotnetcore Build started on `date`
-      - dotnet restore HelloYogis.csproj
+      - echo Beta dotnetcore build started on `date`...
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 328765353998.dkr.ecr.us-east-2.amazonaws.com
-      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - REPOSITORY_URI=328765353998.dkr.ecr.us-east-2.amazonaws.com/glm-beta-dotnetcore
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)      
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
       - echo $COMMIT_HASH
-      - echo $REPOSITORY=URI
+      - echo $REPOSITORY_URI
   build:
     commands:
       - echo Build started on `date`
-      - dotnet publish -c release -o ./build_output HelloYogis.csproj
-      - aws --version
+      - echo Building the Docker image...
+      - docker build -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Writing image definitions file...
+      - printf '[{"name":"hello-world","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 artifacts:
-  files:
-    - ./**/*
-  base-directory: './build_output'
+    files: imagedefinitions.json
