@@ -29,6 +29,7 @@ namespace HelloYogis.Controllers
             List<TeamMember> members = new List<TeamMember>();
             members.Add(new TeamMember { Name = "Yogi", Role = "Team Mascot" });
             members.Add(new TeamMember { Name = "Luna", Role = "Executive Fluffball" });
+            members.Add(new TeamMember { Name = "Burton Guster", Role = "VP of Lounging" });
             return members;
         }
     }
